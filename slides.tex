@@ -52,22 +52,301 @@ Rua do Campo Alegre, 1021/1055, 4169-007 Porto, Portugal}
 \frame
 {
   \frametitle{Motivation}
+  \begin{itemize}
+     \item Due to innovations in computer architectures, parallel programming is becoming increasingly important
+     \item Two main parallel programming models:
+     \pause
+     \begin{itemize}
+        \item Low-level parallelism: mutex, lock, semaphores, signals, CAS instructions, message passing, ... (mostly imperative programming on shared memory)
+        \begin{itemize}
+           \item Hard to understand
+           \item A pain to debug
+           \item In most cases, not portable to other architectures
+        \end{itemize}
+        \pause 
+        \item High-level parallelism: implicit parallelism (logic programming, functional programming), message passing, software transactional memory, map-reduce, databases, ...
+        \begin{itemize}
+           \item High level libraries easier to port
+           \item Easier to reason about
+           \item Moves the intricacies of parallelism away from the programmer to the runtime system / compiler
+           \item Far more portable
+        \end{itemize}
+     \end{itemize}
+  \end{itemize} 
 }
+
+\begin{frame}[fragile]
+   \frametitle{Low level Parallel Quick Sort}
+   \begin{block}{C + pthreads Quick-Sort}
+      \begin{verbatim}[fontsize=\scriptsize,commandchars=\\\{\},frame=single]
+void* quicksort_thread(void *init) \{
+    struct qsort_starter *start = init;
+    parallel_quicksort(start->array, start->left, start->right, start->depth);
+    return NULL;
+\}
+void parallel_quicksort(int *array, int left, int right, int depth) \{
+    if (right > left) \{
+        int pivotIndex = left + (right - left)/2;
+        pivotIndex = partition(array, left, right, pivotIndex);
+        if (depth-- > 0) \{
+            // Create the thread for the first recursive call
+            struct qsort_starter arg = {array, left, pivotIndex-1, depth};
+            pthread_t thread;
+            pthread_create(&thread, NULL, quicksort_thread, &arg);
+            parallel_quicksort(array, pivotIndex+1, right, depth);
+            pthread_join(thread, NULL);
+        \} else \{
+            quicksort(array, left, pivotIndex-1);
+            quicksort(array, pivotIndex+1, right);
+        \}
+    \}
+\}
+       \end{verbatim}
+   \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{High-level Parallel Quick-Sort}
+   \begin{block}{NESL Quick-Sort}
+      \begin{verbatim}[fontsize=\scriptsize,commandchars=\\\{\},frame=single]
+function quicksort(a) =
+if (#a < 2) then a
+else let pivot   = a[#a/2];
+         lesser  = \{e in a| e < pivot\};
+         equal   = \{e in a| e == pivot\};
+         greater = \{e in a| e > pivot\};
+         result  = \{quicksort(v): v in [lesser,greater]\};
+      in result[0] ++ equal ++ result[1];
+      \end{verbatim}
+   \end{block}
+   \begin{block}{Prolog Quick-Sort}
+      \begin{verbatim}[fontsize=\scriptsize,commandchars=\\\{\},frame=single]
+split(_X, [], [], []).
+split(X, [Y|Ys], [Y|Small], Big) :-
+   X >= Y,split(X, Ys, Small, Big).
+split(X, [Y|Ys], Small, [Y|Big]) :-
+   X <Y, split(X, Ys, Small, Big).
+quicksort([], []).
+quicksort([X |Xs], Sorted) :-
+   split(X, Xs, Small, Big), quicksort(Small, SSmall), quicksort(Big, SBig),
+   append(SSmall, [X | SBig], Sorted)
+      \end{verbatim}
+   \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Motivation}
+   \begin{itemize}
+      \item While declarative programming solves many pitfalls of parallel programming, it removes control from the programmer to actively change how parallel execution is scheduled
+      \begin{itemize}
+         \item The price of abstraction is high
+         \item Some programs may run faster given some conditions
+         \item Compilers and runtime systems cannot perfectly parallelize a program
+      \end{itemize}
+      \item I propose a new forward-chaining logic programming language called Linear Meld (LM)
+      \begin{itemize}
+         \item Declarative language suited to solve graph-based problems
+         \item Extends the original Meld~\cite{ashley-rollman-iclp09} with linear logic: offers a structured way to manage state
+         \begin{itemize}
+            \item Logical facts can be asserted and retracted \emph{declaratively}
+         \end{itemize}
+         \item Adds explicit programmer control and opportunities for optimization that arise with linear logic programs
+         \item May be ported to many distributed/parallel architectures
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+\subsection{Related Work}
+
+\frame
+{
+   \frametitle{Declarative Programming}
+   \begin{itemize}
+      \item Logic Programming:
+      \begin{itemize}
+         \item Prolog: and-parallelism, or-parallelism
+         \item Datalog: forward-chaining logic programming for deductive databases
+         \begin{itemize}
+            \item Meld is based on Datalog
+            \item Declarative networking, sensor networks, cloud computing
+         \end{itemize}
+      \end{itemize}
+      \item Functional Programming:
+      \begin{itemize}
+         \item NESL
+         \item Haskell
+      \end{itemize}
+      \item MapReduce: map and reduce
+   \end{itemize}
+}
+
+\frame
+{
+   \frametitle{Graph-based Programming Models}
+   \begin{itemize}
+      \item Many frameworks also model the application as a graph where computation is performed
+      \item Dryad:
+      \begin{itemize}
+         \item Combines computational vertices with communication channels (edges) to form a data-flow graph
+         \item Routines run on vertices are sequential
+      \end{itemize}
+      \item Pregel:
+      \begin{itemize}
+         \item Programs represented as a sequence of iterations
+         \item Iteration: computation + communication
+         \item Works on big graphs and scales to large architectures
+      \end{itemize}
+      \item GraphLab:
+      \begin{itemize}
+         \item C++ framework for developing parallel machine learning algorithms
+         \item Allows routines to read and write different scopes of the neighborhood (depending on the requirements)
+         \item Provides different schedulers for executing nodes
+      \end{itemize}
+   \end{itemize}
+}
+
+\frame
+{
+   \frametitle{Sensor Networks}
+   \begin{itemize}
+      \item Sensor networks are physical distributed systems that can be seen as a graph
+      \item Two types of networks:
+      \begin{itemize}
+         \item Stationary networks
+         \begin{itemize}
+            \item Hood, Tinydb, Regiment
+            \item All provide support for data collection and aggregation over the network
+         \end{itemize}
+         \item Mobile networks
+         \begin{itemize}
+            \item Pleiades: programmer writes application from the point of view of the whole network
+            \item LDP: derived from a method for distributed debugging and detects conditions on variably-sized groups of nodes
+            \item Proto: also compiles global programs into locally executed code
+         \end{itemize}
+      \end{itemize}
+   \end{itemize}
+}
+
+\frame
+{
+   \frametitle{Linear Logic}
+   \begin{itemize}
+      \item Truth as resources
+      \begin{itemize}
+         \item Truth is not immutable but something that is consumed during the proof process
+      \end{itemize}
+      \item Applicable in many areas of computer science: programming languages, concurrent programming, game semantics, knowledge representation, etc
+      \item In the context of the Curry-Horward correspondence, linear logic has been applied to implement \emph{linear types}
+      \begin{itemize}
+         \item Objects must be used exactly once
+         \item Support for concurrency, input/output and data structure's updates
+         \item Similar, but less powerful, than monads
+      \end{itemize}
+      \item Many research logic programming languages:
+      \begin{itemize}
+         \item Lolli: backwards-chaining proof search (lazily manages resources)
+         \item LolliMon: integrates both backwards-chaining and forwards-chaining through a monad
+      \end{itemize}
+   \end{itemize}
+}
+
+\frame
+{
+   \frametitle{Coordination}
+   \begin{itemize}
+   \item The coordination paradigm~\cite{Papadopoulos98coordinationmodels} attempts to clearly divide execution into two parts:
+   \begin{itemize}
+      \item Computation
+      \item Coordination: deals with communication and cooperation between processing units
+   \end{itemize}
+   \pause
+   \item Two types of models:
+   \begin{itemize}
+      \item Data driven
+      \begin{itemize}
+         \item State of computation depends on the data being received and transmitted
+         \item Processing unit responsible for reading and writing data but also responsible for coordinating itself and other processes
+         \item Computation and coordination code is intermixed
+      \end{itemize}
+      \item Task driven
+      \begin{itemize}
+         \item Computation and coordination is more cleanly separated
+         \item Behavior of processing units depends only on the coordination patterns setup before hand
+      \end{itemize}
+   \end{itemize}
+\end{itemize}
+}
+
+\frame
+{
+   \frametitle{Linda}
+   \begin{itemize}
+      \item Linda~\cite{linda} is probably the most well-known (data-driven) coordination language
+      \item Linda adds a tuple space that can be manipulated by the processes:
+      \begin{itemize}
+         \item \texttt{out(t)}: writes tuple
+         \item \texttt{in(t)}: reads a tuple using template \texttt{t}
+         \item \texttt{rd(t)}: retrieves copy
+         \item \texttt{eval(p)}: puts process \texttt{p} in the tuple space and executes it (like a \texttt{fork(p)})
+      \end{itemize}
+   \end{itemize}
+}
+
+\frame
+{
+   \frametitle{Meld}
+   \begin{itemize}
+      \item The original Meld~\cite{ashley-rollman-iclp09} is a forward-chaining logic programming language
+      \begin{itemize}
+         \item Logical facts are persistent
+         \item Program: database + set of rules
+      \end{itemize}
+      
+      \item Designed to write programs for ensembles
+      \begin{itemize}
+         \item Physical distributed system made up of physical robots
+      \end{itemize}
+      
+      \item Sensing facts used to read information about the world
+      \begin{itemize}
+         \item Changes in the outside world, forces the program to incrementally recompute
+      \end{itemize}
+      
+      \item Action facts
+      \begin{itemize}
+         \item Enact actions on the outside world
+      \end{itemize}
+      
+      \item Meld can be seen as a coordination language because facts transmitted between robots will change the computation and behavior of other robots
+   \end{itemize}
+}
+
+\subsection{Thesis Statement}
+
+\frame
+{
+   \frametitle{Thesis Statement}
+   \begin{itemize}
+      \item i
+   \end{itemize}
+}   
 
 \section{Linear Meld}
 
-\subsection{Features}
-
 \begin{frame}[fragile]
-   \frametitle{Predicates}
-   
+   \frametitle{Basics}
+   \begin{itemize}
+      \item LM program: database of facts + list of derivation rules
+      \item We add the axioms to the database and compute a queue of rules that can be applied
+      \begin{itemize}
+         \item Rules have priority
+      \end{itemize}
+      \item Linear facts used in rules are retracted from the database
+      \item Derived facts go into the database
+      \item Persistent facts are kept on the database until the end of execution
+      \item Recursively, we apply derivation rules until \emph{quiescence} is reached
+   \end{itemize}
 \end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Rules}
-   
-\end{frame}
-
 
 \subsection{Bipartiteness Checking}
 
@@ -150,6 +429,93 @@ Rua do Campo Alegre, 1021/1055, 4169-007 Porto, Portugal}
       }
       \end{block}
   \end{columns}
+\end{frame}
+
+
+\subsection{Features}
+
+\begin{frame}[fragile]
+   \frametitle{Predicates and facts}
+   \begin{itemize}
+      \item Predicates represent the kinds of facts we are going to use:
+      \begin{itemize}
+         \item Name + n-ary tuple of types
+      \end{itemize}
+      \item A fact is a predicate on a n-ary tuple of \emph{values}
+      \item Predicate arguments are typed:
+      \begin{itemize}
+         \item Simple types: \emph{node}, \emph{int}, \emph{float}, \emph{string}, or \emph{bool}
+         \item Recursive types: \emph{list X} and \emph{pair X; Y}
+      \end{itemize}
+      \item The first argument of every predicate must be typed as a \emph{node}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Rules}
+   \begin{itemize}
+      \item The general form of a rule is $\mathtt{A_1},...,\mathtt{A_n}$ \texttt{-o} $\mathtt{B_1},...,\mathtt{B_m}$, where $\mathtt{A_1},...,\mathtt{A_n}$ are matched against local facts and $\mathtt{B_1},...,\mathtt{B_m}$ are locally asserted or transmitted to another node
+      \item Rules are restricted:
+      \begin{itemize}
+         \item The body of a rule is restricted to have the same first argument
+         \item The head of a rule may use other nodes as first argument
+      \end{itemize}
+      \item Rules have priorities (from the order in the program's text)
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Selectors}
+   \begin{itemize}
+      \item For performance purposes, facts are combined in an implementation-dependent order
+      \item Due to linearity, sometimes it is useful to sort facts:
+      \begin{itemize}
+         \item We may want to consume a linear fact using the "smaller"/"larger" fact
+      \end{itemize}
+      \item {\small \texttt{[min => W | !edge(A, B, W), transmit(A)] -o transmit(B)]}}
+      \begin{itemize}
+         \item Select the \texttt{edge/3} fact with the smallest \texttt{W} and then derive \texttt{transmit(B)} at the neighbor with the smallest \texttt{W}
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Comprehensions}
+   \begin{itemize}
+      \item Sometimes we need to generate a set of facts from a single linear fact
+      \item Comprehensions solve this particular need by applying an implication \texttt{A -o B} as many times as the database allows
+      \item {\small \texttt{do(A) -o \{B | !edge(A, B) | do(B)\}}}
+      \begin{itemize}
+         \item Once \texttt{do(A)} is retracted, we derive a \texttt{do(B)} for every \texttt{!edge(A, B)} from the database
+      \end{itemize}
+      \item Comprehensions are only allowed in the head of the rule
+      \item The body of the comprehension is also locally restricted
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Aggregates}
+   \begin{itemize}
+      \item Aggregates can be seen as a general case of comprehensions
+      \item While we can also derive a set facts, we can accumulate certain arguments to generate a single fact
+      \item {\footnotesize \texttt{count-prices(A) -o [sum => P | . | price(A, P) | 1 | total(A, P)].}}
+      \begin{itemize}
+         \item Once \texttt{count-prices(A)} is retracted, we retract all \texttt{price(A, P)} facts and derive a fact \texttt{total(A, P)} where \texttt{P} is now the sum of all the values of \texttt{P} in the retracted \texttt{price(A, P)} facts
+      \end{itemize}
+      \item LM provides aggregate operations such as \texttt{min} (minimum), \texttt{max} (maximum), \texttt{sum} and \texttt{count}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Exists}
+   \begin{itemize}
+      \item Exists is based on the linear logic term of the same name and are used to create new node addresses
+      \item We can then use the new address to instantiate new facts for this node
+      \item \texttt{do-work(A, W) -o exists B. (perform-work(B, W))}.
+      \begin{itemize}
+         \item Node \texttt{B} is created and fact \texttt{perform-work(B, W)} is derived at \texttt{B}
+      \end{itemize}
+   \end{itemize}
 \end{frame}
 
 \subsection{Quick-Sort}
@@ -246,14 +612,445 @@ Rua do Campo Alegre, 1021/1055, 4169-007 Porto, Portugal}
 
 \section{Coordination}
 
-\subsection{Example Programs}
+\begin{frame}[fragile]
+   \frametitle{Coordination}
+   \begin{itemize}
+      \item Due to linear facts, the order in which nodes are computed can affect either the final results and/or the speed of computation
+      \begin{itemize}
+         \item Randomized and approximation algorithms benefit from this because they can be computed faster
+      \end{itemize}
+      \item We use \emph{action facts} to tell the runtime system how to schedule computation
+      \begin{itemize}
+         \item Retracted once the runtime system makes the appropriate changes
+      \end{itemize}
+      \item \emph{Sensing facts} are used to sense the state of the runtime system
+      \item We can write derivation rules that use sensing facts and then derive action facts
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Coordination}
+   \begin{columns}[t]
+         \column{.5\textwidth}
+          \begin{block}{Example}
+             \includegraphics<1,2>[height=5.5cm]{graph_coordination.pdf}
+          \end{block}
+          \column{.46\textwidth}
+          \begin{block}{Coordination}
+             {\small
+             \begin{itemize}
+                \item In LM we have $N$ nodes and $W$ workers/threads
+                \item Graph of $N$ nodes is partitioned among the $W$ workers
+                \pause
+                \item Programs are scheduled by changing the \emph{priority} of a node.
+                \item High priority nodes are executed first
+                \item Node priorities are taken into account at the worker level
+             \end{itemize}
+             }
+          \end{block}
+   \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Coordination Directives: Action Facts}
+   \begin{itemize}
+      \item \texttt{type linear action set-priority(node, float)}: set the priority of a node. If the node already has some priority, we only change the priority if the new one is higher priority.
+      \item \texttt{type linear action add-priority(node, float)}: get the current node's priority and increases or decreases it.
+      \item \texttt{type linear action schedule-next(node)}: schedule node to run next.
+      \item \texttt{type linear action unset-priority(node)}: removes the priority, if any, from a given node.
+      \item \texttt{type linear action stop-program(node)}: immediately stops the execution of the whole program.
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Coordination Directives: Sensing Facts}
+   \begin{itemize}
+      \item \texttt{type linear cpu-id(node, node, int)}: the third argument indicates the worker's ID where the node of the second argument is currently running.
+      \item \texttt{type linear priority(node, node, float)}: the third argument is the current priority of the node in the second argument.
+   \end{itemize}
+\end{frame}
+
+\subsection{Shortest Distance}
+
+\begin{frame}[fragile]
+   \frametitle{Shortest Distance}
+   \begin{columns}[t]
+       \column{.5\textwidth}
+       \begin{block}{Program}
+         \begin{verbatim}[fontsize=\tiny,frame=single,commandchars=\\\{\}]
+\alert[1]{type route edge(node, node, int).}
+\alert[1]{type linear path(node, int, int).}
+
+\alert[6]{priority @order asc.}
+
+const visited = 1.
+const notused = 0.
+
+\alert[5]{path(startnode, 0, notused).}
+
+\alert[2]{path(A, B, used),}
+\alert[2]{path(A, B, notused)}
+   \alert[2]{-o path(A, B, used).}
+
+\alert[3]{path(A, B1, X),}
+\alert[3]{path(A, B2, Y), B1 <= B2}
+   \alert[3]{-o path(A, B1, X).}
+
+\alert[4]{path(A, D, notused)}
+   \alert[4]{-o \{B, W | !edge(A, B, W) |}
+         \alert[4]{path(B, D + W, notused),}
+         \alert[4,6]{set-priority(B, D + W))\},}
+      \alert[4]{path(A, D, used).}
+         \end{verbatim}
+      \end{block}
+      \column{.45\textwidth}
+      \begin{block}{Explanation}
+         {\small
+         \begin{itemize}
+            \only<1>{\item \texttt{edge/2} represents the edges between nodes
+            \item \texttt{path/3} represents the distance to \texttt{startnode}
+            \item The goal is to progressively compute the best \texttt{path/3} in all nodes}
+            \only<2>{\item First rule deletes unpropagated distance that was already propagated}
+            \only<3>{\item Second rule deletes longer distances and keeps shorter distances}
+            \only<4>{\item Third and final rule propagates distance to neighbor nodes}
+            \only<5>{\item We start with distance 0 at \texttt{startnode}}
+            \only<6>{\item Node priorities are in ascending order (smaller is better)}
+            \only<6>{\item When a distance is propagated, we set the target node priority to the new derived distance}
+         \end{itemize}
+         }
+      \end{block}
+   \end{columns}
+\end{frame}
+
+\subsection{A-Star}
 
 \section{Proof Theory}
 
 \section{Current Implementation}
 
+\begin{frame}[fragile]
+   \frametitle{Implementation}
+   \begin{itemize}
+      \item Virtual Machine + Compiler
+      \item Compiler compiles code into byte-code
+      \item Virtual machine is written in C++ and uses pthreads to parallelize execution
+      \item Preliminary distributed implementation using MPI and a blinky blocks implementation
+      \item Graph is initially partitioned among the $T$ threads
+      \begin{itemize}
+         \item Nodes are ordered by the compiler for improved data locality
+         \item For load balancing, node stealing is employed whenever a thread is about to become idle
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Compiler}
+   \begin{itemize}
+      \item We compile each rule into a list of instructions and a list of predicates needed to match the rule
+      \item Rule \texttt{!a(X,Y), b(X,Z), c(X,Y) -o d(Y)}:
+      \begin{block}{Byte-Code}
+         \scriptsize\begin{verbatim}
+PERSISTENT ITERATE a MATCHING TO reg 0
+  LINEAR ITERATE b MATCHING TO reg 1
+      (match).0=0.0
+    LINEAR ITERATE c MATCHING TO reg 2
+        (match).0=0.0
+        (match).1=0.1
+      ALLOC d TO reg 3
+      MVFIELDFIELD 0.1 TO 3.0
+      ADDLINEAR reg 3
+      REMOVE reg 2
+      REMOVE reg 1
+      TRY NEXT
+    NEXT
+  NEXT
+RETURN
+         \end{verbatim}
+      \end{block}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Virtual Machine}
+   \begin{itemize}
+      \item Active nodes have unprocessed facts and pending rules to execute
+      \item Data structures to store facts:
+      \begin{itemize}
+         \item Tries: for persistent facts
+         \item Doubly linked lists: for linear facts (easy to remove and add)
+         \item Hash table: for indexing linear facts (indexed by one argument)
+      \end{itemize}
+      \item Threads synchronize when they execute a node and need to send a fact to a node in another thread
+      \begin{itemize}
+         \item Thread needs to lock internal node data structures in order to manage the rule engine
+         \item Each node maintains an efficient data structure to decide which rules, given priorities, need to be executed 
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Virtual Machine}
+   \begin{itemize}
+      \item A global counter and an active/inactive flag for each thread is used to detect termination
+      \item Each thread has two queues:
+      \begin{itemize}
+         \item Normal queue: doubly linked list of active nodes
+         \item Priority queue: heap data structure of active nodes
+         \item Active nodes are either in the normal queue or priority queue
+         \item Both queues are protected by locks
+      \end{itemize}
+      \item Coordination directives are implemented as VM instructions
+      \item Right now, only coordination directives that execute on the nodes of the same thread are taken into account
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Virtual Machine}
+   \begin{block}{Work Loop}
+   \scriptsize
+\begin{verbatim}
+void work_loop(thread_id tid):
+   while (true):
+      current_node = NULL;
+      if(has_work(tid)):
+         current_node = priority_queue.pop_work(tid)
+         if current_node == NULL:
+            current_node = normal_queue.pop_work(tid);
+      else:
+         target_thread = random(NUM_THREADS);
+         // need to steal a node
+         for (i = 0; i < NUM_THREADS && current_node == NULL; ++i):
+            target_thread = (target_thread + 1) % NUM_THREADS;
+            current_node = steal_node_from_thread(target_thread)
+      if(current_node == NULL):
+         become_idle(tid);
+         if(!synchronize_termination(tid)):
+            return;
+         become_active(tid);
+      else:
+         process_node(current_node, tid);
+   \end{verbatim}
+   \end{block}
+\end{frame}
+
 \section{Experimental Results}
 
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Scalability}
+   \begin{columns}[t]
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{speedup_8queens-13.pdf}
+         \caption{N-Queens program (13x13~board)}
+      \end{figure}
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{speedup_greedy-graph-coloring-search_engines.pdf}
+         \caption{Greedy Graph Coloring: using a graph of web pages.}
+      \end{figure}
+   \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Scalability}
+   \begin{figure}[b]
+      \includegraphics[width=0.5\textwidth]{speedup_pagerank-search_engines.pdf}
+      \caption{Asynchronous PageRank: using a graph of web pages.}
+   \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Coordination}
+   \begin{columns}[t]
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_heat-transfer-80.pdf}
+         \caption{Heat transfer program: using a grid dataset}
+      \end{figure}
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_shortest-uspowergrid.pdf}
+         \caption{Shortest Distance: using US Power Grid dataset}
+      \end{figure}
+   \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Coordination}
+   \begin{columns}[t]
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_heat-transfer-80.pdf}
+         \caption{Heat transfer program: using a grid dataset}
+      \end{figure}
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_shortest-uspowergrid.pdf}
+         \caption{Shortest Distance: using US Power Grid dataset}
+      \end{figure}
+   \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Coordination}
+   \begin{columns}
+      \column{.3\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_bp-graphlab-400.pdf}
+         \caption{Basic BP without splashes\newline\newline}
+      \end{figure}
+      \column{.3\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup2_bp-graphlab-400.pdf}
+         \caption{BP with splashes\newline\newline}
+      \end{figure}
+      \column{.3\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/improv_bp-graphlab-400.pdf}
+         \caption{Coordination improvements of BP with splashes over basic BP}
+      \end{figure}
+   \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Absolute Execution Time}
+   \begin{figure}[b]
+      \begin{tabular}{ | l | l | l | l |}
+       \hline
+
+       Size & C & Python & YAP Prolog \\ \hline\hline
+       10 & 16.92 & \textbf{0,62} & 5,42 \\
+       11 & 21.59 & \textbf{0.64} & 6.47 \\
+       12 & 10.32 & \textbf{0.73} & 7.61 \\
+       13 & 14.35 & \textbf{0.88} & 10.38 \\
+       \hline
+       \end{tabular}
+       \caption{N-Queens problem.}
+    \end{figure}
+    \begin{figure}[b]
+       \begin{tabular}{ | l | l | l | l |}
+        \hline
+
+        Size & C & Python & GraphLab \\ \hline\hline
+        10 & \textbf{0.67} & \textbf{0,03} & \textbf{1.00} \\
+        50 & \textit{1.77} & \textbf{0.04} & \textit{1.73} \\
+        200 & \textit{1.99} & \textbf{0.05} & \textit{1.79} \\
+        400 & \textit{2.00} & \textbf{0.04} & \textit{1.80} \\
+        \hline
+        \end{tabular}
+        \caption{Belief Propagation program.}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Language Expressiveness and Conciseness}
+   \begin{table}[ht]
+   \begin{center}
+      \resizebox{12cm}{!}{
+       \begin{tabular}{| c | c | l | c |}
+       \hline
+       \textbf{Program} & \textbf{LM} & \textbf{Others} & \textbf{Average} \\ \hline \hline
+       SSSP & 6 & 25 (C++) & 24\% \\ \hline
+       PageRank & 30 & 60 (GraphLab) & 50\% \\ \hline
+       BP & 50 & 90 (GraphLab) & 55\% \\ \hline
+       Splash BP & 50 & 350 (GraphLab) & 14\% \\ \hline
+       N Queens & 40 & 300 (C~\cite{8queens-parallel}), 400 (MPI~\cite{Rolfe:2008:SMA:1473195.1473217}) & 11\% \\ \hline
+       \end{tabular}}
+   \end{center}
+        \caption{Comparison of source code size against other languages.}
+   \end{table}
+\end{frame}
+
 \section{Roadmap}
+
+\begin{frame}[fragile]
+   \frametitle{First Goal: Improved Coordination Mechanism}
+   \begin{itemize}
+      \item Coordination directives show potential in improving execution of programs, although our system shows some problems when using it with several threads
+      \begin{itemize}
+         \item We need an efficient design for sharing coordination information between threads
+         \item Coordination time + Execution time $<$ Uncoordinated execution time
+      \end{itemize}
+      \item We also need more programs that use coordination in order to design more useful coordination directives
+      \begin{itemize}
+         \item Programs where data locality matters: may be more important in distributed systems
+         \item Decision tree algorithms?
+         \item Neural network pruning? (improved back propagation during training)
+         \item Alpha-Beta algorithm?
+      \end{itemize}
+      \item Due to new multicore architectures and traditional distributed systems it might be useful to also see the processing units as a graph
+      \begin{itemize}
+         \item Useful for data locality
+         \item Improved use of the L2 cache?
+         \item New sensing facts
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Second Goal: Improved parallelism}
+   \begin{itemize}
+      \item In our results, there are some scalability problems as the number of threads increases to 32 and 64
+      \item There's still some room for improvement in terms of thread management:
+      \begin{itemize}
+         \item Improve node stealing algorithm
+      \end{itemize}
+      \item Measure and instrument the virtual machine to better understand how threads behave during execution
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Third Goal: Compilation and Runtime Improvements}
+   \begin{itemize}
+      \item Improve absolute running time of LM programs and make LM more competitive
+      \item It is possible to take advantage of the fact that LM is a logic programming language in order to simplify and optimize programs
+      \item Compiler should detect code invariants such as:
+      \begin{itemize}
+         \item Property linear facts: each node has a single fact of a predicate that is consumed but re-derived immediately with updated arguments
+         \item Triggering linear facts: some facts never trigger new rules (example: they are property facts)
+         \item Single use facts: linear facts that once derived are known to immediately derive a rule
+      \end{itemize}
+      \item Measure the impact of such optimizations
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Optional Goal: Program correctness}
+   \begin{itemize}
+      \item Some work has already been done to prove properties of linear logic programs.
+      \item Robert Simmons employed an approach called generative invariants~\cite{simmons:Thesis} to prove that an operational semantics of a programming language follows some invariants, namely type preservation
+      \item It may be possible to prove invariants about our programs, including correctness and termination invariants
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Timeline}
+   \begin{itemize}
+      \item Summer 2014
+      \begin{itemize}
+         \item Measure sources of overhead of the VM and apply required optimizations
+         \item Improve scalability of current coordination mechanisms
+         \item Write 1 or 2 new coordinated programs and extend the set of coordination directives if needed
+      \end{itemize}
+      \item Fall 2014
+      \begin{itemize}
+         \item Design a set of invariant optimizations and implement them
+         \item Benchmark programs to see how they are improved
+         \item Write 1 or 2 new coordinated programs
+         \item Continue working on scalability optimizations
+      \end{itemize}
+      \item Spring 2015
+      \begin{itemize}
+         \item Finish the previous tasks
+         \item Write the thesis document
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+  \frametitle{References}
+  \bibliographystyle{amsalpha}
+  \bibliography{refs.bib}
+\end{frame}
 
 \end{document}
