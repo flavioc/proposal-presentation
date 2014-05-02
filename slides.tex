@@ -330,9 +330,37 @@ quicksort([X |Xs], Sorted) :-
 {
    \frametitle{Thesis Statement}
    \begin{itemize}
-      \item i
+      \item I propose a new linear logic programming language called Linear Meld (LM) designed to efficiently execute and scale parallel (graph-based) programs on multicore architectures.
+      \item I argue that LM is a suitable declarative programming model for implementing expressive and scalable programs since it gives the programmer more control over parallel execution
    \end{itemize}
 }   
+
+\begin{frame}[fragile]
+   \frametitle{Thesis Statement: How To}
+   \begin{itemize}
+      \item Linear Logic
+      \begin{itemize}
+         \item Extension to the original Meld
+         \item Declarative way to express state
+         \item Opportunities for optimization
+      \end{itemize}
+      \item Coordination
+      \begin{itemize}
+         \item Sensing and action facts to change how the runtime system behaves
+         \item Using same facilities of regular computation
+         \begin{itemize}
+            \item Change priority of computation 
+         \end{itemize}
+         \item More programmer control $\rightarrow$ more expressive
+      \end{itemize}
+      \item Fast sequential execution
+      \begin{itemize}
+         \item Take advantage of linear logic to improve code
+      \end{itemize}
+      \item Multicore parallelism
+      \item Experimental results
+   \end{itemize}
+\end{frame}
 
 \section{Linear Meld}
 
