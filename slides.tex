@@ -167,8 +167,8 @@ quicksort([X |Xs], Sorted) :-
    \begin{itemize}
       \item Logic Programming:
       \begin{itemize}
-         \item Prolog: and-parallelism, or-parallelism
-         \item Datalog: forward-chaining logic programming for deductive databases
+         \item Prolog~\cite{Colmerauer:1993:BP:154766.155362}: and-parallelism, or-parallelism~\cite{Gupta:2001:PEP:504083.504085}
+         \item Datalog~\cite{zaniolo-arni-ong-dood93}: forward-chaining logic programming for deductive databases
          \begin{itemize}
             \item Meld is based on Datalog
             \item Declarative networking, sensor networks, cloud computing
@@ -179,7 +179,7 @@ quicksort([X |Xs], Sorted) :-
          \item NESL
          \item Haskell
       \end{itemize}
-      \item MapReduce: map and reduce
+      \item MapReduce~\cite{Dean:2008:MSD:1327452.1327492}: map and reduce
    \end{itemize}
 }
 
@@ -188,18 +188,18 @@ quicksort([X |Xs], Sorted) :-
    \frametitle{Graph-based Programming Models}
    \begin{itemize}
       \item Many frameworks also model the application as a graph where computation is performed
-      \item Dryad:
+      \item Dryad~\cite{Isard:2007:DDD:1272996.1273005}:
       \begin{itemize}
          \item Combines computational vertices with communication channels (edges) to form a data-flow graph
          \item Routines run on vertices are sequential
       \end{itemize}
-      \item Pregel:
+      \item Pregel~\cite{Malewicz:2010:PSL:1807167.1807184}:
       \begin{itemize}
          \item Programs represented as a sequence of iterations
          \item Iteration: computation + communication
          \item Works on big graphs and scales to large architectures
       \end{itemize}
-      \item GraphLab:
+      \item GraphLab~\cite{GraphLab2010}:
       \begin{itemize}
          \item C++ framework for developing parallel machine learning algorithms
          \item Allows routines to read and write different scopes of the neighborhood (depending on the requirements)
@@ -217,14 +217,14 @@ quicksort([X |Xs], Sorted) :-
       \begin{itemize}
          \item Stationary networks
          \begin{itemize}
-            \item Hood, Tinydb, Regiment
+            \item Hood~\cite{Whitehouse:2004:HNA:990064.990079}, Tinydb~\cite{Madden:2005:TAQ:1061318.1061322}, Regiment~\cite{Newton:2007:RMS:1236360.1236422}
             \item All provide support for data collection and aggregation over the network
          \end{itemize}
          \item Mobile networks
          \begin{itemize}
-            \item Pleiades: programmer writes application from the point of view of the whole network
-            \item LDP: derived from a method for distributed debugging and detects conditions on variably-sized groups of nodes
-            \item Proto: also compiles global programs into locally executed code
+            \item Pleiades~\cite{Kothari:2007:REP:1250734.1250757}: programmer writes application from the point of view of the whole network
+            \item LDP~\cite{4543691}: derived from a method for distributed debugging and detects conditions on variably-sized groups of nodes
+            \item Proto~\cite{Beal:2006:IEE:1137236.1137354}: also compiles global programs into locally executed code
          \end{itemize}
       \end{itemize}
    \end{itemize}
@@ -247,8 +247,8 @@ quicksort([X |Xs], Sorted) :-
       \end{itemize}
       \item Many research logic programming languages:
       \begin{itemize}
-         \item Lolli: backwards-chaining proof search (lazily manages resources)
-         \item LolliMon: integrates both backwards-chaining and forwards-chaining through a monad
+         \item Lolli~\cite{Hodas94logicprogramming}: backwards-chaining proof search (lazily manages resources)
+         \item LolliMon~\cite{Lopez:2005:MCL:1069774.1069778}: integrates both backwards-chaining and forwards-chaining through a monad
       \end{itemize}
    \end{itemize}
 }
