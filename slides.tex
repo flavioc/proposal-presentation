@@ -423,28 +423,29 @@ quicksort([X |Xs], Sorted) :-
 \alert[1]{type linear colored(node, int).}
 \alert[1]{type linear fail(node).}
 
-\alert[2]{fun next(int X) : int =}
-   \alert[2]{if X <> 1 then 1 else 2 end.}
+fun next(int X) : int =
+   if X <> 1 then 1 else 2 end.
 
-\alert[3,7]{mark(@1, 1).}
-\alert[3]{!edge(@1, @2). !edge(@1, @3).}
-\alert[3]{!edge(@2, @4).}
-\alert[3]{!edge(@3, @4).}
+\alert[2,6]{mark(@1, 1).}
+\alert[2]{!edge(@1, @2). !edge(@1, @3).}
+\alert[2]{!edge(@2, @4).}
+\alert[2]{!edge(@3, @4).}
+\alert[2]{uncolored(A).}
 
-\alert[4,8,9,10,11]{mark(A, P), uncolored(A)}
-   \alert[4,8,9,10,11]{-o \{B | !edge(A, B) | mark(B, next(P))\},}
-      \alert[4,8,9,10,11]{colored(A, P).}
+\alert[3,7,8,9,10]{mark(A, P), uncolored(A)}
+   \alert[3,7,8,9,10]{-o \{B | !edge(A, B) | mark(B, next(P))\},}
+      \alert[3,7,8,9,10]{colored(A, P).}
 
-\alert[5,12]{mark(A, P), colored(A, P)}
-   \alert[5,12]{-o colored(A, P).}
-\alert[6]{mark(A, P1), colored(A, P2), P1 <> P2}
-   \alert[6]{-o fail(A).}
-\alert[6]{mark(A, P), fail(A)}
-   \alert[6]{-o fail(A).}
+\alert[4,11]{mark(A, P), colored(A, P)}
+   \alert[4,11]{-o colored(A, P).}
+\alert[5]{mark(A, P1), colored(A, P2), P1 <> P2}
+   \alert[5]{-o fail(A).}
+\alert[5]{mark(A, P), fail(A)}
+   \alert[5]{-o fail(A).}
        \end{verbatim}
      \end{block}
       \column{.5\textwidth}
-      \begin{block}{\only<1>{Predicates}\only<2>{Functions}\only<3>{Axiom}\only<4>{First rule}\only<5>{Second rule}\only<6>{Third and fourth rule}\only<7-12>{Execution}}
+      \begin{block}{\only<1>{Predicates}\only<2>{Axiom}\only<3>{First rule}\only<4>{Second rule}\only<5>{Third and fourth rule}\only<6-11>{Execution}}
          \centering
          {\scriptsize
          \only<1>{\begin{itemize}
@@ -455,13 +456,10 @@ quicksort([X |Xs], Sorted) :-
                 \item Nodes are either \texttt{colored/2} or \texttt{uncolored/1}.
              \end{itemize}}
          \only<2>{\begin{itemize}
-               \item LM allows the declaration of recursive functions using a small functional language.
-            \end{itemize}}
-         \only<3>{\begin{itemize}
                 \item Axioms are rules without bodies that are added to the database as soon as the program starts.
                 \item Node literals are written as \texttt{@X}, where \texttt{X} is the node number.
              \end{itemize}}
-         \only<4>{\begin{itemize}
+         \only<3>{\begin{itemize}
                \item If a node is scheduled to be \texttt{mark/1}'ed and is \texttt{uncolored/1}, then we can assign the color \texttt{P} to the node by deriving \texttt{colored(A,P)}.
                \item We use a comprehension to mark the neighbor nodes \\
                \texttt{\{B|!edge(A,B)|mark(B,next(P))\}}:
@@ -470,21 +468,21 @@ quicksort([X |Xs], Sorted) :-
                   \item {\tiny With \texttt{next(P)} we attempt to color the neighbor node with the opposite color.}
                \end{itemize}
          \end{itemize}}
-         \only<5>{\begin{itemize}
+         \only<4>{\begin{itemize}
             \item If a node is to be marked with color \texttt{P} and has color \texttt{P}, then we keep it that way.
          \end{itemize}}
-         \only<6>{\begin{itemize}
+         \only<5>{\begin{itemize}
             \item However, if the colors are different then we derive \texttt{fail/1}.
             \item ... same if the coloring process has already failed.
          \end{itemize}}
-         \only<7-12>{
+         \only<6-11>{
          \begin{figure}[ht]
-            \includegraphics<7>[height=4.5cm]{bipartiteness1.pdf}
-            \includegraphics<8>[height=4.5cm]{bipartiteness2.pdf}
-            \includegraphics<9>[height=4.5cm]{bipartiteness3.pdf}
-            \includegraphics<10>[height=4.5cm]{bipartiteness4.pdf}
-            \includegraphics<11>[height=4.5cm]{bipartiteness5.pdf}
-            \includegraphics<12>[height=4.5cm]{bipartiteness6.pdf}
+            \includegraphics<6>[height=4.5cm]{bipartiteness1.pdf}
+            \includegraphics<7>[height=4.5cm]{bipartiteness2.pdf}
+            \includegraphics<8>[height=4.5cm]{bipartiteness3.pdf}
+            \includegraphics<9>[height=4.5cm]{bipartiteness4.pdf}
+            \includegraphics<10>[height=4.5cm]{bipartiteness5.pdf}
+            \includegraphics<11>[height=4.5cm]{bipartiteness6.pdf}
          \end{figure}
          }
       }
