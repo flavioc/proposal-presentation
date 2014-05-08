@@ -653,28 +653,30 @@ fun next(int X) : int =
        \begin{block}{Program}
          \begin{verbatim}[fontsize=\tiny,frame=single,commandchars=\\\{\}]
 \alert[1]{type route edge(node, node, int).}
-\alert[1]{type linear new-distance(node, int).}
+\alert[1]{type linear shortest-distance(node, int).}
 \alert[1]{type linear distance(node, int).}
 
 \alert[6]{priority @order asc.}
 
 \alert[2]{new-distance(startnode, 0).}
 
-\alert[3]{new-distance(A, B1),}
-\alert[3]{distance(A, B2),}
-\alert[3]{B1 >= B2}
-   \alert[3]{-o distance(A, B).}
+\alert[3]{new-distance(A, B1), new-distance(A, B2),}
+\alert[3]{B1 <= B2}
+   \alert[3]{-o new-distance(A, B1).}
 
-\alert[4]{new-distance(A, B1),}
-\alert[4]{new-distance(A, B2),}
-\alert[4]{B1 <= B2}
-   \alert[4]{-o new-distance(A, B1).}
+\alert[4]{new-distance(A, B1), shortest-distance(A, B2),}
+\alert[4]{B1 >= B2}
+   \alert[4]{-o shortest-distance(A, B2).}
+   
+\alert[5]{new-distance(A, B1), shortest-distance(A, B2),}
+\alert[5]{B1 < B2}
+   \alert[5]{-o new-distance(A, B1).}
 
-\alert[5]{new-distance(A, D)}
-   \alert[5]{-o \{B, W | !edge(A, B, W) |}
-         \alert[5]{new-distance(B, D + W),}
-         \alert[5,6]{set-priority(B, D + W))\},}
-      \alert[5]{distance(A, D).}
+\alert[6]{new-distance(A, D)}
+   \alert[6]{-o \{B, W | !edge(A, B, W) |}
+         \alert[6]{new-distance(B, D + W),}
+         \alert[6,7]{set-priority(B, D + W))\},}
+      \alert[6]{shortest-distance(A, D).}
          \end{verbatim}
       \end{block}
       \column{.45\textwidth}
@@ -682,15 +684,16 @@ fun next(int X) : int =
          {\small
          \begin{itemize}
             \only<1>{\item \texttt{edge/2} represents the edges between nodes
-            \item \texttt{distance/2} and \texttt{new-distance/2} represent the distance to \texttt{startnode}
+            \item \texttt{shortest-distance/2} and \texttt{new-distance/2} represent the distance to \texttt{startnode}
             \item The goal is to progressively compute the best \texttt{distance/2} in all nodes}
             \only<2>{\item We start with distance 0 at \texttt{startnode}}
             
-            \only<3>{\item First rule deletes new distances that are longer than the current one}
+            \only<3>{\item First rule picks the best new distance}
             \only<4>{\item Second rule deletes longer distances and keeps shorter distances}
-            \only<5>{\item Third and final rule propagates distance to neighbor nodes}
-            \only<6>{\item Node priorities are in ascending order (smaller is better)}
-            \only<6>{\item When a distance is propagated, we set the target node priority to the new derived distance}
+            \only<5>{\item Third rule deletes the previous shortest distance}
+            \only<6>{\item Fourth and final rule propagates distance to neighbor nodes}
+            \only<7>{\item Node priorities are in ascending order (smaller is better)}
+            \only<7>{\item When a distance is propagated, we set the target node priority to the new derived distance}
          \end{itemize}
          }
       \end{block}
@@ -800,7 +803,7 @@ second-phase(A, [A, B | Next], Back)
          \item Priority queue: heap data structure of active nodes
          \item Active nodes are either in the normal queue or priority queue
       \end{itemize}
-      \item Right now, only coordination directives that execute on the nodes of the same thread are taken into account :-(
+      \item Right now, only coordination directives that execute on the nodes of the same thread are taken into account
    \end{itemize}
 \end{frame}
 
@@ -877,6 +880,11 @@ second-phase(A, [A, B | Next], Back)
 \begin{frame}[fragile]
    \frametitle{First Goal: Improved Coordination Mechanisms and Programs}
    \begin{itemize}
+      \item Coordination directives show potential in improving execution of programs, although our system shows some problems when using it with several threads
+      \begin{itemize}
+         \item We need an efficient design for sharing coordination information between threads
+         \item Coordination time + Execution time $<$ Uncoordinated execution time
+      \end{itemize}
       \item We need more programs that use coordination in order to design more useful coordination directives
       \begin{itemize}
          \item Decision tree algorithms?
@@ -890,12 +898,7 @@ second-phase(A, [A, B | Next], Back)
          \item Improved use of the L2 cache?
          \item New sensing facts
       \end{itemize}
-      \item Coordination directives show potential in improving execution of programs, although our system shows some problems when using it with several threads
-      \begin{itemize}
-         \item We need an efficient design for sharing coordination information between threads
-         \item Coordination time + Execution time $<$ Uncoordinated execution time
-      \end{itemize}
-      \end{itemize}
+   \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
