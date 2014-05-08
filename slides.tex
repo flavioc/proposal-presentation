@@ -152,8 +152,7 @@ quicksort([X |Xs], Sorted) :-
          \begin{itemize}
             \item Logical facts can be asserted and retracted \emph{declaratively}
          \end{itemize}
-         \item Adds explicit programmer control and opportunities for optimization that arise with linear logic programs
-         \item May be ported to many distributed/parallel architectures
+         \item Adds explicit programmer control by using action and sensing facts
       \end{itemize}
    \end{itemize}
 \end{frame}
@@ -188,8 +187,6 @@ quicksort([X |Xs], Sorted) :-
          \begin{itemize}
             \item Enact actions on the outside world
          \end{itemize}
-      
-         \item Meld can be seen as a coordination language because facts transmitted between robots will change the computation and behavior of other robots
       \end{itemize}
    \end{itemize}
 }
@@ -275,12 +272,6 @@ quicksort([X |Xs], Sorted) :-
          \item Truth is not immutable but something that is consumed during the proof process
       \end{itemize}
       \item Applicable in many areas of computer science: programming languages, concurrent programming, game semantics, knowledge representation, etc
-      \item In the context of the Curry-Horward correspondence, linear logic has been applied to implement \emph{linear types}
-      \begin{itemize}
-         \item Objects must be used exactly once
-         \item Support for concurrency, input/output and data structure's updates
-         \item Similar, but less powerful, than monads
-      \end{itemize}
       \item Many research logic programming languages:
       \begin{itemize}
          \item Lolli~\cite{Hodas94logicprogramming}: backwards-chaining proof search (lazily manages resources)
@@ -312,6 +303,7 @@ quicksort([X |Xs], Sorted) :-
             \item Behavior of processing units depends only on the coordination patterns setup before hand
          \end{itemize}
       \end{itemize}
+      \item The original Meld can be seen as a coordination language because facts transmitted between robots will change the computation and behavior of other robots
 \end{itemize}
 }
 
@@ -338,35 +330,36 @@ quicksort([X |Xs], Sorted) :-
 {
    \frametitle{Thesis Statement}
    \begin{itemize}
-      \item I propose a new linear logic programming language called Linear Meld (LM) designed to efficiently execute and scale parallel (graph-based) programs on multicore architectures.
-      \item I argue that LM is a suitable declarative programming model for implementing expressive and scalable programs since it gives the programmer more control over parallel execution
+      \item I argue that Linear Meld (LM) is a suitable declarative programming model for implementing expressive and scalable programs with added programmer control over parallel execution
+      \begin{itemize}
+         \item Domain: graph-based programs on multicore architecures
+      \end{itemize}
    \end{itemize}
 }   
 
 \begin{frame}[fragile]
    \frametitle{Thesis Statement: How To}
    \begin{itemize}
-      \item Linear Logic
+      \item Foundations:
       \begin{itemize}
-         \item Extension to the original Meld
-         \item Declarative way to express state
-         \item Opportunities for optimization
-      \end{itemize}
-      \item Coordination
-      \begin{itemize}
-         \item Sensing and action facts to change how the runtime system behaves
-         \item Using same facilities of regular computation
+         \item Linear Logic
          \begin{itemize}
-            \item Change priority of computation 
+            \item Declarative way to express state
+            \item Opportunities for optimization
+            \item Extension to the original Meld
          \end{itemize}
-         \item More programmer control $\rightarrow$ more expressive
+         \item Coordination
+         \begin{itemize}
+            \item Sensing and action facts to change how the runtime system behaves
+            \item More programmer control $\rightarrow$ more expressive
+         \end{itemize}
       \end{itemize}
-      \item Fast sequential execution
+      \item Practical aspects:
       \begin{itemize}
-         \item Take advantage of linear logic to improve code
+         \item Fast sequential execution
+         \item Scalable multicore parallelism
+         \item Experimental results
       \end{itemize}
-      \item Scalable multicore parallelism
-      \item Experimental results
    \end{itemize}
 \end{frame}
 
@@ -376,8 +369,8 @@ quicksort([X |Xs], Sorted) :-
       \item Designed LM language
       \item Specified LM static and dynamic semantics
       \begin{itemize}
-         \item High level semantics (closer to the linear logic fragment)
-         \item Low level semantics (closer to the implementation)
+         \item High level dynamic semantics (closer to the linear logic fragment)
+         \item Low level dynamic semantics (closer to the implementation)
          \item Proved that the low level dynamic semantics are sound
       \end{itemize}
       \item Implemented compiler and virtual machine for multicores
@@ -399,7 +392,6 @@ quicksort([X |Xs], Sorted) :-
       \begin{itemize}
          \item Rules have priorities
       \end{itemize}
-      \item Linear facts can be retracted from the database
       \item The first argument of each fact refers to a node
       \begin{itemize}
          \item Running program can be seen as a graph data structure
@@ -609,11 +601,7 @@ fun next(int X) : int =
          \item Randomized and approximation algorithms benefit from this because they can be computed faster
       \end{itemize}
       \item We use \emph{action facts} to tell the runtime system how to schedule computation
-      \begin{itemize}
-         \item Retracted once the runtime system makes the appropriate changes
-      \end{itemize}
       \item \emph{Sensing facts} are used to sense the state of the runtime system
-      \item We can write derivation rules that use sensing facts and then derive action facts
    \end{itemize}
 \end{frame}
 
@@ -665,28 +653,28 @@ fun next(int X) : int =
        \begin{block}{Program}
          \begin{verbatim}[fontsize=\tiny,frame=single,commandchars=\\\{\}]
 \alert[1]{type route edge(node, node, int).}
-\alert[1]{type linear path(node, int, int).}
+\alert[1]{type linear new-distance(node, int).}
+\alert[1]{type linear distance(node, int).}
 
 \alert[6]{priority @order asc.}
 
-const visited = 1.
-const notused = 0.
+\alert[2]{new-distance(startnode, 0).}
 
-\alert[2]{path(startnode, 0, notused).}
+\alert[3]{new-distance(A, B1),}
+\alert[3]{distance(A, B2),}
+\alert[3]{B1 >= B2}
+   \alert[3]{-o distance(A, B).}
 
-\alert[3]{path(A, B, used),}
-\alert[3]{path(A, B, notused)}
-   \alert[3]{-o path(A, B, used).}
+\alert[4]{new-distance(A, B1),}
+\alert[4]{new-distance(A, B2),}
+\alert[4]{B1 <= B2}
+   \alert[4]{-o new-distance(A, B1).}
 
-\alert[4]{path(A, B1, X),}
-\alert[4]{path(A, B2, Y), B1 <= B2}
-   \alert[4]{-o path(A, B1, X).}
-
-\alert[5]{path(A, D, notused)}
+\alert[5]{new-distance(A, D)}
    \alert[5]{-o \{B, W | !edge(A, B, W) |}
-         \alert[5]{path(B, D + W, notused),}
+         \alert[5]{new-distance(B, D + W),}
          \alert[5,6]{set-priority(B, D + W))\},}
-      \alert[5]{path(A, D, used).}
+      \alert[5]{distance(A, D).}
          \end{verbatim}
       \end{block}
       \column{.45\textwidth}
@@ -694,11 +682,11 @@ const notused = 0.
          {\small
          \begin{itemize}
             \only<1>{\item \texttt{edge/2} represents the edges between nodes
-            \item \texttt{path/3} represents the distance to \texttt{startnode}
-            \item The goal is to progressively compute the best \texttt{path/3} in all nodes}
+            \item \texttt{distance/2} and \texttt{new-distance/2} represent the distance to \texttt{startnode}
+            \item The goal is to progressively compute the best \texttt{distance/2} in all nodes}
             \only<2>{\item We start with distance 0 at \texttt{startnode}}
             
-            \only<3>{\item First rule deletes unpropagated distance that was already propagated}
+            \only<3>{\item First rule deletes new distances that are longer than the current one}
             \only<4>{\item Second rule deletes longer distances and keeps shorter distances}
             \only<5>{\item Third and final rule propagates distance to neighbor nodes}
             \only<6>{\item Node priorities are in ascending order (smaller is better)}
@@ -803,113 +791,17 @@ second-phase(A, [A, B | Next], Back)
 \end{block}
 \end{frame}
 
-%\input{proofs}
-
-\section{Current Implementation}
-
 \begin{frame}[fragile]
    \frametitle{Implementation}
    \begin{itemize}
-      \item Virtual Machine + Compiler
-      \item Compiler compiles code into byte-code
-      \item Virtual machine is written in C++ and uses pthreads to parallelize execution
-      \item Preliminary distributed implementation using MPI and a blinky blocks implementation
-      \item Graph is initially partitioned among the $T$ threads
-      \begin{itemize}
-         \item Nodes are ordered by the compiler for improved data locality
-         \item For load balancing, node stealing is employed whenever a thread is about to become idle
-      \end{itemize}
-   \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Compiler}
-   \begin{itemize}
-      \item We compile each rule into a list of instructions and a list of predicates needed to match the rule
-      \item Rule \texttt{!a(X,Y), b(X,Z), c(X,Y) -o d(Y)}:
-      \begin{block}{Byte-Code}
-         \scriptsize\begin{verbatim}
-PERSISTENT ITERATE a MATCHING TO reg 0
-  LINEAR ITERATE b MATCHING TO reg 1
-      (match).0=0.0
-    LINEAR ITERATE c MATCHING TO reg 2
-        (match).0=0.0
-        (match).1=0.1
-      ALLOC d TO reg 3
-      MVFIELDFIELD 0.1 TO 3.0
-      ADDLINEAR reg 3
-      REMOVE reg 2
-      REMOVE reg 1
-      TRY NEXT
-    NEXT
-  NEXT
-RETURN
-         \end{verbatim}
-      \end{block}
-   \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Virtual Machine}
-   \begin{itemize}
-      \item Active nodes have unprocessed facts and pending rules to execute
-      \item Data structures to store facts:
-      \begin{itemize}
-         \item Tries: for persistent facts
-         \item Doubly linked lists: for linear facts (easy to remove and add)
-         \item Hash table: for indexing linear facts (indexed by one argument)
-      \end{itemize}
-      \item Threads synchronize when they execute a node and need to send a fact to a node in another thread
-      \begin{itemize}
-         \item Thread needs to lock internal node data structures in order to manage the rule engine
-         \item Each node maintains an efficient data structure to decide which rules, given priorities, need to be executed 
-      \end{itemize}
-   \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Virtual Machine}
-   \begin{itemize}
-      %\item A global counter and an active/inactive flag for each thread is used to detect termination
       \item Each thread has two queues:
       \begin{itemize}
          \item Normal queue: doubly linked list of active nodes
          \item Priority queue: heap data structure of active nodes
          \item Active nodes are either in the normal queue or priority queue
-         \item Both queues are protected by locks
       \end{itemize}
-      \item Coordination directives are implemented as VM instructions
-      \item Right now, only coordination directives that execute on the nodes of the same thread are taken into account
+      \item Right now, only coordination directives that execute on the nodes of the same thread are taken into account :-(
    \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Virtual Machine}
-   \begin{block}{Work Loop}
-   \scriptsize
-\begin{verbatim}
-void work_loop(thread_id tid):
-   while (true):
-      current_node = NULL;
-      if(has_work(tid)):
-         current_node = priority_queue.pop_work(tid)
-         if current_node == NULL:
-            current_node = normal_queue.pop_work(tid);
-      else:
-         target_thread = random(NUM_THREADS);
-         // need to steal a node
-         for (i = 0; i < NUM_THREADS && current_node == NULL; ++i):
-            target_thread = (target_thread + 1) % NUM_THREADS;
-            current_node = steal_node_from_thread(target_thread)
-      if(current_node == NULL):
-         become_idle(tid);
-         if(!synchronize_termination(tid)):
-            return;
-         become_active(tid);
-      else:
-         process_node(current_node, tid);
-   \end{verbatim}
-   \end{block}
 \end{frame}
 
 \section{Experimental Results}
@@ -930,6 +822,7 @@ void work_loop(thread_id tid):
    \end{columns}
 \end{frame}
 
+\begin{comment}
 \begin{frame}[fragile]
    \frametitle{Experimental Results: Scalability}
    \begin{figure}[b]
@@ -937,38 +830,7 @@ void work_loop(thread_id tid):
       \caption{Asynchronous PageRank: using a graph of web pages.}
    \end{figure}
 \end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Experimental Results: Coordination}
-   \begin{columns}[t]
-      \column{.5\textwidth}
-      \begin{figure}[b]
-         \includegraphics[width=\textwidth]{coord/speedup_heat-transfer-80.pdf}
-         \caption{Heat transfer program: using a grid dataset}
-      \end{figure}
-      \column{.5\textwidth}
-      \begin{figure}[b]
-         \includegraphics[width=\textwidth]{coord/speedup_shortest-uspowergrid.pdf}
-         \caption{Shortest Distance: using US Power Grid dataset}
-      \end{figure}
-   \end{columns}
-\end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Experimental Results: Coordination}
-   \begin{columns}[t]
-      \column{.5\textwidth}
-      \begin{figure}[b]
-         \includegraphics[width=\textwidth]{coord/speedup_heat-transfer-80.pdf}
-         \caption{Heat transfer program: using a grid dataset}
-      \end{figure}
-      \column{.5\textwidth}
-      \begin{figure}[b]
-         \includegraphics[width=\textwidth]{coord/speedup_shortest-uspowergrid.pdf}
-         \caption{Shortest Distance: using US Power Grid dataset}
-      \end{figure}
-   \end{columns}
-\end{frame}
+\end{comment}
 
 \begin{frame}[fragile]
    \frametitle{Experimental Results: Coordination}
@@ -989,36 +851,6 @@ void work_loop(thread_id tid):
          \caption{Coordination improvements of BP with splashes over basic BP}
       \end{figure}
    \end{columns}
-\end{frame}
-
-\begin{frame}[fragile]
-   \frametitle{Experimental Results: Absolute Execution Time}
-   \begin{figure}[b]
-      \begin{tabular}{ | l | l | l | l |}
-       \hline
-
-       Size & C & Python & YAP Prolog \\ \hline\hline
-       10 & 16.92 & \textbf{0,62} & 5,42 \\
-       11 & 21.59 & \textbf{0.64} & 6.47 \\
-       12 & 10.32 & \textbf{0.73} & 7.61 \\
-       13 & 14.35 & \textbf{0.88} & 10.38 \\
-       \hline
-       \end{tabular}
-       \caption{N-Queens problem.}
-    \end{figure}
-    \begin{figure}[b]
-       \begin{tabular}{ | l | l | l | l |}
-        \hline
-
-        Size & C & Python & GraphLab \\ \hline\hline
-        10 & \textbf{0.67} & \textbf{0,03} & \textbf{1.00} \\
-        50 & \textit{1.77} & \textbf{0.04} & \textit{1.73} \\
-        200 & \textit{1.99} & \textbf{0.05} & \textit{1.79} \\
-        400 & \textit{2.00} & \textbf{0.04} & \textit{1.80} \\
-        \hline
-        \end{tabular}
-        \caption{Belief Propagation program.}
-    \end{figure}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -1043,19 +875,14 @@ void work_loop(thread_id tid):
 \section{Roadmap}
 
 \begin{frame}[fragile]
-   \frametitle{First Goal: Improved Coordination Mechanism}
+   \frametitle{First Goal: Improved Coordination Mechanisms and Programs}
    \begin{itemize}
-      \item Coordination directives show potential in improving execution of programs, although our system shows some problems when using it with several threads
+      \item We need more programs that use coordination in order to design more useful coordination directives
       \begin{itemize}
-         \item We need an efficient design for sharing coordination information between threads
-         \item Coordination time + Execution time $<$ Uncoordinated execution time
-      \end{itemize}
-      \item We also need more programs that use coordination in order to design more useful coordination directives
-      \begin{itemize}
-         \item Programs where data locality matters: may be more important in distributed systems
          \item Decision tree algorithms?
          \item Neural network pruning? (improved back propagation during training)
          \item Alpha-Beta algorithm?
+         \item Programs where data locality matters: may be more important in distributed systems
       \end{itemize}
       \item Due to new multicore architectures and traditional distributed systems it might be useful to also see the processing units as a graph
       \begin{itemize}
@@ -1063,7 +890,12 @@ void work_loop(thread_id tid):
          \item Improved use of the L2 cache?
          \item New sensing facts
       \end{itemize}
-   \end{itemize}
+      \item Coordination directives show potential in improving execution of programs, although our system shows some problems when using it with several threads
+      \begin{itemize}
+         \item We need an efficient design for sharing coordination information between threads
+         \item Coordination time + Execution time $<$ Uncoordinated execution time
+      \end{itemize}
+      \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -1107,8 +939,7 @@ void work_loop(thread_id tid):
    \begin{itemize}
       \item Fall 2014
       \begin{itemize}
-         \item Measure sources of overhead of the VM and apply required optimizations
-         \item Improve scalability of current coordination mechanisms
+         \item Improve general scalability and scalability of current coordination mechanisms
          \item Write 1 or 2 new coordinated programs and extend the set of coordination directives if needed
       \end{itemize}
       \item Spring 2014
@@ -1137,10 +968,129 @@ void work_loop(thread_id tid):
    
 \end{frame}
 
+\begin{frame}[fragile]
+   \frametitle{Compiler}
+   \begin{itemize}
+      \item We compile each rule into a list of instructions and a list of predicates needed to match the rule
+      \item Rule \texttt{!a(X,Y), b(X,Z), c(X,Y) -o d(Y)}:
+      \begin{block}{Byte-Code}
+         \scriptsize\begin{verbatim}
+PERSISTENT ITERATE a MATCHING TO reg 0
+  LINEAR ITERATE b MATCHING TO reg 1
+      (match).0=0.0
+    LINEAR ITERATE c MATCHING TO reg 2
+        (match).0=0.0
+        (match).1=0.1
+      ALLOC d TO reg 3
+      MVFIELDFIELD 0.1 TO 3.0
+      ADDLINEAR reg 3
+      REMOVE reg 2
+      REMOVE reg 1
+      TRY NEXT
+    NEXT
+  NEXT
+RETURN
+         \end{verbatim}
+      \end{block}
+   \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Virtual Machine}
+   \begin{itemize}
+      \item Data structures to store facts:
+      \begin{itemize}
+         \item Tries: for persistent facts
+         \item Doubly linked lists: for linear facts (easy to remove and add)
+         \item Hash table: for indexing linear facts (indexed by one argument)
+      \end{itemize}
+   \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+   \frametitle{Virtual Machine}
+   \begin{block}{Work Loop}
+   \scriptsize
+\begin{verbatim}
+void work_loop(thread_id tid):
+   while (true):
+      current_node = NULL;
+      if(has_work(tid)):
+         current_node = priority_queue.pop_work(tid)
+         if current_node == NULL:
+            current_node = normal_queue.pop_work(tid);
+      else:
+         target_thread = random(NUM_THREADS);
+         // need to steal a node
+         for (i = 0; i < NUM_THREADS && current_node == NULL; ++i):
+            target_thread = (target_thread + 1) % NUM_THREADS;
+            current_node = steal_node_from_thread(target_thread)
+      if(current_node == NULL):
+         become_idle(tid);
+         if(!synchronize_termination(tid)):
+            return;
+         become_active(tid);
+      else:
+         process_node(current_node, tid);
+   \end{verbatim}
+   \end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Absolute Execution Time}
+   \begin{figure}[b]
+      \begin{tabular}{ | l | l | l | l |}
+       \hline
+
+       Size & C & Python & YAP Prolog \\ \hline\hline
+       10 & 16.92 & \textbf{0,62} & 5,42 \\
+       11 & 21.59 & \textbf{0.64} & 6.47 \\
+       12 & 10.32 & \textbf{0.73} & 7.61 \\
+       13 & 14.35 & \textbf{0.88} & 10.38 \\
+       \hline
+       \end{tabular}
+       \caption{N-Queens problem.}
+    \end{figure}
+    \begin{figure}[b]
+       \begin{tabular}{ | l | l | l | l |}
+        \hline
+
+        Size & C & Python & GraphLab \\ \hline\hline
+        10 & \textbf{0.67} & \textbf{0,03} & \textbf{1.00} \\
+        50 & \textit{1.77} & \textbf{0.04} & \textit{1.73} \\
+        200 & \textit{1.99} & \textbf{0.05} & \textit{1.79} \\
+        400 & \textit{2.00} & \textbf{0.04} & \textit{1.80} \\
+        \hline
+        \end{tabular}
+        \caption{Belief Propagation program.}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+   \frametitle{Experimental Results: Coordination}
+   \begin{columns}[t]
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_heat-transfer-80.pdf}
+         \caption{Heat transfer program: using a grid dataset}
+      \end{figure}
+      \column{.5\textwidth}
+      \begin{figure}[b]
+         \includegraphics[width=\textwidth]{coord/speedup_shortest-uspowergrid.pdf}
+         \caption{Shortest Distance: using US Power Grid dataset}
+      \end{figure}
+   \end{columns}
+\end{frame}
+
+
 \begin{frame}[allowframebreaks]
   \frametitle{References}
   \bibliographystyle{amsalpha}
   \bibliography{refs.bib}
 \end{frame}
+
+
 
 \end{document}
