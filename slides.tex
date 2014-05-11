@@ -653,29 +653,25 @@ fun next(int X) : int =
          \begin{verbatim}[fontsize=\tiny,frame=single,commandchars=\\\{\}]
 \alert[1]{type route edge(node, node, int).}
 \alert[1]{type linear shortest-distance(node, int).}
-\alert[1]{type linear distance(node, int).}
+\alert[1]{type linear new-distance(node, int).}
 
-\alert[6]{priority @order asc.}
+\alert[5]{priority @order asc.}
 
 \alert[2]{new-distance(startnode, 0).}
+\alert[2]{shortest-distance(A, maxinf).}
 
-\alert[3]{new-distance(A, B1), new-distance(A, B2),}
-\alert[3]{B1 <= B2}
-   \alert[3]{-o new-distance(A, B1).}
+\alert[3]{new-distance(A, D1),}
+\alert[3]{shortest-distance(A, D2),}
+\alert[3]{D1 >= D2}
+   \alert[3]{-o shortest-distance(A, D2).}
 
-\alert[4]{new-distance(A, B1), shortest-distance(A, B2),}
-\alert[4]{B1 >= B2}
-   \alert[4]{-o shortest-distance(A, B2).}
-   
-\alert[5]{new-distance(A, B1), shortest-distance(A, B2),}
-\alert[5]{B1 < B2}
-   \alert[5]{-o new-distance(A, B1).}
-
-\alert[6]{new-distance(A, D)}
-   \alert[6]{-o \{B, W | !edge(A, B, W) |}
-         \alert[6]{new-distance(B, D + W),}
-         \alert[6,7]{set-priority(B, D + W))\},}
-      \alert[6]{shortest-distance(A, D).}
+\alert[4]{new-distance(A, D1),}
+\alert[4]{shortest-distance(A, D2),}
+\alert[4]{D1 < D2}
+   \alert[4]{-o shortest-distance(A, D1),}
+     \alert[4]{\{B, W | !edge(A, B, W) | }
+         \alert[4]{new-distance(B, D1 + W),}
+         \alert[4,6]{set-priority(B, D1 + W)\}.}
          \end{verbatim}
       \end{block}
       \column{.45\textwidth}
@@ -686,13 +682,10 @@ fun next(int X) : int =
             \item \texttt{shortest-distance/2} and \texttt{new-distance/2} represent the distance to \texttt{startnode}
             \item The goal is to progressively compute the best \texttt{distance/2} in all nodes}
             \only<2>{\item We start with distance 0 at \texttt{startnode}}
-            
-            \only<3>{\item First rule picks the best new distance}
-            \only<4>{\item Second rule deletes longer distances and keeps shorter distances}
-            \only<5>{\item Third rule deletes the previous shortest distance}
-            \only<6>{\item Fourth and final rule propagates distance to neighbor nodes}
-            \only<7>{\item Node priorities are in ascending order (smaller is better)}
-            \only<7>{\item When a distance is propagated, we set the target node priority to the new derived distance}
+            \only<3>{\item First rule deletes longer distances}
+            \only<4>{\item Second rule replaces current shortest distance and propagates the new distance to the neighborhood}
+            \only<5>{\item Node priorities are in ascending order (smaller is better)}
+            \only<6>{\item When a distance is propagated, we set the target node priority to the new derived distance}
          \end{itemize}
          }
       \end{block}
