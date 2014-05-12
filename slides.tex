@@ -655,23 +655,28 @@ fun next(int X) : int =
 \alert[1]{type linear shortest-distance(node, int).}
 \alert[1]{type linear new-distance(node, int).}
 
-\alert[5]{priority @order asc.}
+\alert[6]{priority @order asc.}
 
 \alert[2]{new-distance(startnode, 0).}
 \alert[2]{shortest-distance(A, maxinf).}
 
 \alert[3]{new-distance(A, D1),}
-\alert[3]{shortest-distance(A, D2),}
-\alert[3]{D1 >= D2}
-   \alert[3]{-o shortest-distance(A, D2).}
+\alert[3]{new-distance(A, D2),}
+\alert[3]{D1 <= D2}
+   \alert[3]{-o new-distance(A, D1).}
 
 \alert[4]{new-distance(A, D1),}
 \alert[4]{shortest-distance(A, D2),}
-\alert[4]{D1 < D2}
-   \alert[4]{-o shortest-distance(A, D1),}
-     \alert[4]{\{B, W | !edge(A, B, W) | }
-         \alert[4]{new-distance(B, D1 + W),}
-         \alert[4,6]{set-priority(B, D1 + W)\}.}
+\alert[4]{D1 >= D2}
+   \alert[4]{-o shortest-distance(A, D2).}
+
+\alert[5]{new-distance(A, D1),}
+\alert[5]{shortest-distance(A, D2),}
+\alert[5]{D1 < D2}
+   \alert[5]{-o shortest-distance(A, D1),}
+     \alert[5]{\{B, W | !edge(A, B, W) | }
+         \alert[5]{new-distance(B, D1 + W),}
+         \alert[5,7]{set-priority(B, D1 + W)\}.}
          \end{verbatim}
       \end{block}
       \column{.45\textwidth}
@@ -682,10 +687,10 @@ fun next(int X) : int =
             \item \texttt{shortest-distance/2} and \texttt{new-distance/2} represent the distance to \texttt{startnode}
             \item The goal is to progressively compute the best \texttt{distance/2} in all nodes}
             \only<2>{\item We start with distance 0 at \texttt{startnode}}
-            \only<3>{\item First rule deletes longer distances}
-            \only<4>{\item Second rule replaces current shortest distance and propagates the new distance to the neighborhood}
-            \only<5>{\item Node priorities are in ascending order (smaller is better)}
-            \only<6>{\item When a distance is propagated, we set the target node priority to the new derived distance}
+            \only<3,4>{\item First and second rule deletes longer distances}
+            \only<5>{\item Third rule replaces current shortest distance and propagates the new distance to the neighborhood}
+            \only<6>{\item Node priorities are in ascending order (smaller is better)}
+            \only<7>{\item When a distance is propagated, we set the target node priority to the new derived distance}
          \end{itemize}
          }
       \end{block}
@@ -961,6 +966,12 @@ second-phase(A, [A, B | Next], Back)
       \bibitem{ciclops} A Parallel Virtual Machine for Executing Forward-Chaining Linear Logic Programs. 14th Colloquium on Implementation of Constraint and LOgic Programming Systems (CICLOPS 2014)
    \end{thebibliography}
    
+\end{frame}
+
+\begin{frame}{Thank You}
+\begin{center}
+{\Huge Thank you for your time!}
+\end{center}
 \end{frame}
 
 \begin{frame}[fragile]
